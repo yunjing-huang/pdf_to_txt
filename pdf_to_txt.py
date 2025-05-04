@@ -3,6 +3,7 @@ from tkinter import filedialog
 import fitz  # PyMuPDF
 import re
 import os
+from collections import defaultdict
 def read_pdf_to_txt(pdf_path):
     doc = fitz.open(pdf_path)
     record_list = []
@@ -28,12 +29,21 @@ def read_pdf_to_txt(pdf_path):
         if message_id == "628":
             record_list2.append(line[1].replace("\n", " "))
 
+    grouped = defaultdict(list)
+    for line in record_list2:
+        match = line.strip().split()
+        if len(match) == 3:
+            line_label, number, message_id = match
+            grouped[message_id].append(f"Line# {number}")
     file = open("./generated_txts/"+pdf_path.split("/")[-1][:-4] + ".txt", "w")
     file.truncate()
     file.close
     file = open("./generated_txts/"+pdf_path.split("/")[-1][:-4] + ".txt", "a")
-    for line in record_list2:
-        file.write(line + "\n")
+    for message_id in grouped.keys():
+        file.write("\n")
+        file.write(f"{message_id}\n")
+        for line_num in grouped[message_id]:
+            file.write(f"{line_num}\n")
     file.close
     return "./generated_txts/"+pdf_path.split("/")[-1][:-4] + ".txt"
 
@@ -86,10 +96,6 @@ if __name__ == "__main__":
     ctk.set_default_color_theme("blue")
     app = PDFApp()
     app.mainloop()
-
-
-
-
 
 
 
